@@ -78,6 +78,20 @@ async function run() {
         const bloodRequests = db.collection("bloodRequests");
         // const bookingsCollection = db.collection("bookings");
 
+        //================= Blood Bridge =================//
+         app.get('/dashboard/donor/my-requests', async (req, res) => {
+            const donationRequests = await bloodRequests.find().toArray();
+            res.json(donationRequests);
+        });
+
+        app.post('/dashboard/donor/create-request',  async (req, res) => {
+            const requestData = req.body; // Assuming the booking data is sent in the request body
+            const result = await bloodRequests.insertOne(requestData);
+            res.json(result); // Send the result of the insertion back to the client
+        });
+
+        //================= Blood Bridge =================//
+
         app.get('/doctor-appointments', async (req, res) => {
             const doctors = await doctorCollection.find().toArray();
             res.json(doctors);
@@ -138,8 +152,8 @@ async function run() {
 
         // Send a ping to confirm a successful connection
         // TODO: Comment this before deploying the app to production
-        // await client.db("admin").command({ ping: 1 });
-        // console.log("Pinged your deployment. You successfully connected to MongoDB!");
+        await client.db("admin").command({ ping: 1 });
+        console.log("Pinged your deployment. You successfully connected to MongoDB!");
 
     } finally {
         // Ensures that the client will close when you finish/error
