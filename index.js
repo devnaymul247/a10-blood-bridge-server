@@ -18,40 +18,40 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 // ============== JWT =================
-const { createRemoteJWKSet, jwtVerify } = require('jose-cjs');
+// const { createRemoteJWKSet, jwtVerify } = require('jose-cjs');
 
-//JSON Web Key Set
-const JWKS = createRemoteJWKSet(
-    new URL(`${process.env.CLIENT_URL}/api/auth/jwks`)
-);
+// //JSON Web Key Set
+// const JWKS = createRemoteJWKSet(
+//     new URL(`${process.env.CLIENT_URL}/api/auth/jwks`)
+// );
 
-//middleware
-const verifyToken = async (req, res, next) => {
-    const authHeader = req.headers.authorization;
+// //middleware
+// const verifyToken = async (req, res, next) => {
+//     const authHeader = req.headers.authorization;
 
-    // console.log(authHeader);
-    // next();
+//     // console.log(authHeader);
+//     // next();
 
-    if (!authHeader) {
-        // console.log("No auth header");
-        return res.status(401).json({ message: "Unauthorize" })
-    }
-    const token = authHeader.split(" ")[1];
-    if (!token) {
-        // console.log("No token found");
-        return res.status(401).json({ message: "Unauthorize" })
-    }
+//     if (!authHeader) {
+//         // console.log("No auth header");
+//         return res.status(401).json({ message: "Unauthorize" })
+//     }
+//     const token = authHeader.split(" ")[1];
+//     if (!token) {
+//         // console.log("No token found");
+//         return res.status(401).json({ message: "Unauthorize" })
+//     }
 
-    try {
-        const { payload } = await jwtVerify(token, JWKS);
-        // console.log("inside try block", payload);
-        return next()
-    } catch (error) {
-        console.error(error);
-        return res.status(403).json({ message: "Invalid token" })
-    }
+//     try {
+//         const { payload } = await jwtVerify(token, JWKS);
+//         // console.log("inside try block", payload);
+//         return next()
+//     } catch (error) {
+//         console.error(error);
+//         return res.status(403).json({ message: "Invalid token" })
+//     }
 
-};
+// };
 
 //================ mongodb =================
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
@@ -72,18 +72,18 @@ async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
         // TODO: Comment this line before deploying the app to production
-        // await client.connect();
+        await client.connect();
 
-        const db = client.db("Doc_Appoint");
-        const doctorCollection = db.collection("doctor_appointments");
-        const bookingsCollection = db.collection("bookings");
+        const db = client.db("Blood_Bridge");
+        const bloodRequests = db.collection("bloodRequests");
+        // const bookingsCollection = db.collection("bookings");
 
         app.get('/doctor-appointments', async (req, res) => {
             const doctors = await doctorCollection.find().toArray();
             res.json(doctors);
         });
 
-        app.get('/doctor-appointments/:id', verifyToken, async (req, res) => {
+        app.get('/doctor-appointments/:id', async (req, res) => {
             const id = req.params;
             // const {id} = req.params; // this is also same as above line
             // console.log(id);
@@ -92,7 +92,7 @@ async function run() {
             res.json(doctors);
         });
 
-        app.get('/booking/:userEmail', verifyToken, async (req, res) => {
+        app.get('/booking/:userEmail',  async (req, res) => {
             const userEmailData = req.params.userEmail;
             // console.log(userEmailData);
             const bookings = await bookingsCollection.find({ userEmail: userEmailData }).toArray();
@@ -100,7 +100,7 @@ async function run() {
             res.json(bookings); // Send the list of bookings as a JSON response
         });
 
-        app.patch('/booking/:id', verifyToken, async (req, res) => {
+        app.patch('/booking/:id',  async (req, res) => {
             const id = req.params; // Get the booking ID from the URL parameters
             const updateData = req.body; // Extract ID and update data from request body
             const result = await bookingsCollection.updateOne(
@@ -111,7 +111,7 @@ async function run() {
             // console.log(updateData);
             res.json(result); // Send the result of the update back to the client
         });
-        app.patch('/doctor-appointments/:id', verifyToken, async (req, res) => {
+        app.patch('/doctor-appointments/:id',  async (req, res) => {
             const { id } = req.params; // Get the booking ID from the URL parameters
             // console.log(id);
             const updateRating = req.body; // Extract ID and update data from request body
@@ -124,13 +124,13 @@ async function run() {
             res.json(result); // Send the result of the update back to the client
         });
 
-        app.delete('/booking/:id', verifyToken, async (req, res) => {
+        app.delete('/booking/:id',  async (req, res) => {
             const id = req.params; // Get the booking ID from the URL parameters
             const result = await bookingsCollection.deleteOne({ _id: new ObjectId(id) });
             res.json(result); // Send the result of the deletion back to the client
         });
 
-        app.post('/booking', verifyToken, async (req, res) => {
+        app.post('/booking',  async (req, res) => {
             const bookingData = req.body; // Assuming the booking data is sent in the request body
             const result = await bookingsCollection.insertOne(bookingData);
             res.json(result); // Send the result of the insertion back to the client
